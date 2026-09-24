@@ -20,6 +20,13 @@ public static class AzureMappers
 
     public static string KqlString(string value) => "'" + value.Replace(@"\", @"\\").Replace("'", @"\'") + "'";
 
+    /// <summary>
+    /// Maps VM resource ids to their power state, for joining a status-only VM list (instance-view power state,
+    /// trimmed model) onto a full VM list (hardwareProfile etc., no instance view). Ids are matched case-insensitively.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string?> PowerStatesById(IEnumerable<(string Id, IEnumerable<string?>? StatusCodes)> vms) =>
+        vms.ToDictionary(v => v.Id, v => PowerState(v.StatusCodes), StringComparer.OrdinalIgnoreCase);
+
     public static IReadOnlyList<ResourceTypeCount> ParseGraphRows(BinaryData data)
     {
         using var doc = JsonDocument.Parse(data.ToMemory());

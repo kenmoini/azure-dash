@@ -49,4 +49,25 @@ public class AzureMappersTests
     {
         Assert.Throws<AzureError>(() => AzureMappers.ParseGraphRows(BinaryData.FromString("{\"columns\":[]}")));
     }
+
+    [Fact]
+    public void Power_states_by_id_matches_case_insensitively()
+    {
+        var byId = AzureMappers.PowerStatesById(
+        [
+            ("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/VM-A", ["PowerState/running"]),
+        ]);
+        Assert.Equal("running", byId["/subscriptions/s/resourcegroups/rg/providers/microsoft.compute/virtualmachines/vm-a"]);
+    }
+
+    [Fact]
+    public void Power_states_by_id_missing_vm_has_no_entry()
+    {
+        var byId = AzureMappers.PowerStatesById(
+        [
+            ("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-a", ["PowerState/running"]),
+        ]);
+        Assert.False(byId.ContainsKey("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-b"));
+        Assert.Null(byId.GetValueOrDefault("/subscriptions/s/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-b"));
+    }
 }

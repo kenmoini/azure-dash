@@ -64,13 +64,34 @@ public sealed class LiveAzureProvider : IAzureProvider
         var sub = Subscription(scope);
         var list = new List<VmInfo>();
 
-        // statusOnly=true returns instance-view power state; the resource-group list API has no such option.
-        var vms = rg is not null ? rg.GetVirtualMachines().GetAllAsync(cancellationToken: ct) : sub.GetVirtualMachinesAsync(statusOnly: "true", cancellationToken: ct);
-        await foreach (var vm in vms)
+        // The resource-group list API has no statusOnly option, so RG scope never gets a power state (InstanceView
+        // is null on that model). At subscription scope, statusOnly=true returns instance-view power state but a
+        // trimmed model (no hardwareProfile), so we list twice there and join power state onto the full list by VM id.
+        if (rg is not null)
         {
-            var d = vm.Data;
-            list.Add(new("VM", d.Name, d.Id.ResourceGroupName ?? "", d.Location.ToString(), AzureMappers.Join(d.Zones),
-                d.HardwareProfile?.VmSize?.ToString(), AzureMappers.PowerState(d.InstanceView?.Statuses?.Select(s => s.Code)), null));
+            await foreach (var vm in rg.GetVirtualMachines().GetAllAsync(cancellationToken: ct))
+            {
+                var d = vm.Data;
+                list.Add(new("VM", d.Name, d.Id.ResourceGroupName ?? "", d.Location.ToString(), AzureMappers.Join(d.Zones),
+                    d.HardwareProfile?.VmSize?.ToString(), AzureMappers.PowerState(d.InstanceView?.Statuses?.Select(s => s.Code)), null));
+            }
+        }
+        else
+        {
+            var full = new List<Azure.ResourceManager.Compute.VirtualMachineData>();
+            await foreach (var vm in sub.GetVirtualMachinesAsync(cancellationToken: ct)) full.Add(vm.Data);
+
+            var statuses = new List<(string Id, IEnumerable<string?>? StatusCodes)>();
+            await foreach (var vm in sub.GetVirtualMachinesAsync(statusOnly: "true", cancellationToken: ct))
+                statuses.Add((vm.Data.Id.ToString(), vm.Data.InstanceView?.Statuses?.Select(s => s.Code)));
+            var powerStates = AzureMappers.PowerStatesById(statuses);
+
+            foreach (var d in full)
+            {
+                powerStates.TryGetValue(d.Id.ToString(), out var powerState);
+                list.Add(new("VM", d.Name, d.Id.ResourceGroupName ?? "", d.Location.ToString(), AzureMappers.Join(d.Zones),
+                    d.HardwareProfile?.VmSize?.ToString(), powerState, null));
+            }
         }
 
         var sets = rg is not null ? rg.GetVirtualMachineScaleSets().GetAllAsync(ct) : sub.GetVirtualMachineScaleSetsAsync(ct);
