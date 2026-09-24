@@ -2,6 +2,7 @@ using System.Text.Json;
 using AzureDash.Configuration;
 using AzureDash.Endpoints;
 using AzureDash.Load;
+using AzureDash.Runtime;
 using AzureDash.State;
 
 EnvLookup env = Environment.GetEnvironmentVariable;
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<RuntimeState>();
 builder.Services.AddSingleton(_ => new CpuLoad());
 builder.Services.AddSingleton<StateService>();
 builder.Services.AddSingleton<IProcessExit, EnvironmentProcessExit>();
+builder.Services.AddSingleton(sp => new RuntimeInfoProvider("/", sp.GetRequiredService<EnvLookup>(), sp.GetRequiredService<StateService>()));
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
 
@@ -25,6 +27,7 @@ var app = builder.Build();
 
 app.MapHealthEndpoints();
 app.MapControlsEndpoints();
+app.MapRuntimeEndpoints();
 
 await app.RunAsync();
 return 0;
