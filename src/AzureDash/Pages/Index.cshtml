@@ -1,0 +1,18 @@
+@page "/"
+@using AzureDash.Runtime
+@using AzureDash.State
+@inject RuntimeInfoProvider Runtime
+@inject StateService State
+@{
+    ViewData["Title"] = "Runtime";
+    ViewData["Nav"] = "runtime";
+}
+<div class="grid">
+    <section class="card">
+        <h2>Runtime</h2>
+        <div id="runtime" hx-get="/partials/runtime" hx-trigger="every 5s" hx-swap="innerHTML">
+            <component type="typeof(RuntimePartial)" render-mode="Static" param-Info="@(Runtime.Get())" />
+        </div>
+    </section>
+    <component type="typeof(ControlsPartial)" render-mode="Static" param-Snapshot="@(State.Snapshot())" />
+</div>

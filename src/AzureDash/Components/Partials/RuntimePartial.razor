@@ -1,0 +1,33 @@
+@using AzureDash.Runtime
+<dl class="kv">
+    <dt>Probes</dt>
+    <dd>
+        <span class="badge @(Info.State.Live ? "ok" : "bad")">live: @(Info.State.Live ? "OK" : "FAILING")</span>
+        <span class="badge @(Info.State.Ready ? "ok" : "bad")">ready: @(Info.State.Ready ? "OK" : "FAILING")</span>
+        <span class="badge @(Info.State.CpuLoad.Active ? "warn" : "ok")">cpu load: @(Info.State.CpuLoad.Active ? $"{Info.State.CpuLoad.Workers} worker(s)" : "off")</span>
+    </dd>
+    <dt>Hostname</dt><dd>@Info.Hostname</dd>
+    <dt>Container runtime</dt><dd>@Info.ContainerRuntime</dd>
+    <dt>Orchestrator</dt><dd>@Info.Orchestrator</dd>
+    @if (Info.Pod is { } pod)
+    {
+        <dt>Pod</dt><dd>@Fmt.Or(pod.Name)</dd>
+        <dt>Namespace</dt><dd>@Fmt.Or(pod.Namespace)</dd>
+        <dt>Node</dt><dd>@Fmt.Or(pod.Node)</dd>
+        <dt>Pod IP</dt><dd>@Fmt.Or(pod.Ip)</dd>
+        <dt>Service account</dt><dd>@Fmt.Or(pod.ServiceAccount)</dd>
+    }
+    <dt>cgroup</dt><dd>@Info.Cgroup.Version</dd>
+    <dt>CPU limit</dt><dd>@Fmt.Cores(Info.Cgroup.CpuLimitCores)</dd>
+    <dt>Memory</dt><dd>@Fmt.Bytes(Info.Cgroup.MemoryUsageBytes) used / @Fmt.Bytes(Info.Cgroup.MemoryLimitBytes, "unlimited")</dd>
+    <dt>OS</dt><dd>@Info.Os</dd>
+    <dt>.NET</dt><dd>@Info.Dotnet (@Info.Gc GC)</dd>
+    <dt>CPUs visible</dt><dd>@Info.ProcessorCount</dd>
+    <dt>Load (1m)</dt><dd>@(Info.LoadAverage1m?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) ?? "—")</dd>
+    <dt>uid / gid / pid</dt><dd>@Fmt.Or(Info.Uid?.ToString()) / @Fmt.Or(Info.Gid?.ToString()) / @Info.Pid</dd>
+    <dt>Started</dt><dd>@Fmt.Time(Info.State.StartedAt) (up @Fmt.Duration(Info.State.UptimeSeconds))</dd>
+</dl>
+
+@code {
+    [Parameter, EditorRequired] public RuntimeInfo Info { get; set; } = default!;
+}

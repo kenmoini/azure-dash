@@ -22,8 +22,13 @@ builder.Services.AddSingleton<IProcessExit, EnvironmentProcessExit>();
 builder.Services.AddSingleton(sp => new RuntimeInfoProvider("/", sp.GetRequiredService<EnvLookup>(), sp.GetRequiredService<StateService>()));
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+builder.Services.AddRazorPages();
+builder.Services.AddRazorComponents();
 
 var app = builder.Build();
+
+app.UseStaticFiles();
+app.MapRazorPages();
 
 app.MapHealthEndpoints();
 app.MapControlsEndpoints();

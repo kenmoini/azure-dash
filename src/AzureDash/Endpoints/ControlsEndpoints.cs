@@ -1,6 +1,8 @@
+using AzureDash.Components.Partials;
 using AzureDash.Configuration;
 using AzureDash.Load;
 using AzureDash.State;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace AzureDash.Endpoints;
 
@@ -52,7 +54,13 @@ public static class ControlsEndpoints
             : Results.Json(new CrashResponse($"exiting with code {code}", code), statusCode: 202);
     }
 
-    static IResult Respond(HttpContext ctx, StateService s) => Results.Json(s.Snapshot());
+    static IResult Respond(HttpContext ctx, StateService s)
+    {
+        var snapshot = s.Snapshot();
+        return Htmx.IsHtmx(ctx.Request)
+            ? new RazorComponentResult<ControlsPartial>(new { Snapshot = snapshot })
+            : Results.Json(snapshot);
+    }
 
     static IResult Unprocessable(string detail) => Results.Json(new ErrorBody(detail), statusCode: 422);
 
