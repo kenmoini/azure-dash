@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AzureDash/AzureDash.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AzureDash.Tests/AzureDash.Tests.csproj" />
+  </Folder>
+</Solution>

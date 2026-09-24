@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <RootNamespace>AzureDash</RootNamespace>
+    <AssemblyName>AzureDash</AssemblyName>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="AzureDash.Tests" />
+  </ItemGroup>
+</Project>
