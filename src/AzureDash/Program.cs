@@ -9,6 +9,9 @@ using AzureDash.Load;
 using AzureDash.Runtime;
 using AzureDash.State;
 
+if (args.Contains("--healthcheck"))
+    return await SelfProbe.RunAsync(SelfProbe.LocalUrl(Environment.GetEnvironmentVariable), new SocketsHttpHandler(), Console.Out);
+
 EnvLookup env = Environment.GetEnvironmentVariable;
 var settings = AppSettings.FromEnvironment(env);
 
