@@ -53,7 +53,7 @@ See [deploy/README.md](deploy/README.md). The overlays are `deploy/aks`, `deploy
 | GET | `/api/identity`, `/api/imds` | JSON |
 | GET | `/partials/*` | htmx fragments |
 
-Every `/controls/*` endpoint returns 403 when `CONTROLS_ENABLED=false`. Control and fragment endpoints return HTML to htmx (`HX-Request: true`) and JSON otherwise.
+Every `/controls/*` endpoint returns 403 when `CONTROLS_ENABLED=false`. `/controls/*` return an HTML fragment to htmx (`HX-Request: true`) and JSON otherwise; `/partials/*` are HTML fragments; JSON lives under `/api/*`.
 
 ## Configuration
 

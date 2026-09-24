@@ -35,8 +35,3 @@ patches:
         value:
           name: AZURE_FEDERATED_TOKEN_FILE
           value: /var/run/secrets/azure/tokens/azure-identity-token
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: AZURE_AUTHORITY_HOST
-          value: https://login.microsoftonline.com/

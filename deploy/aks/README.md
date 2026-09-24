@@ -40,15 +40,22 @@ For least privilege, scope Reader to a single resource group instead
 
 ## 3. Deploy
 
+Put `$CLIENT_ID` into `deploy/aks/kustomization.yaml` **before** applying, so a later re-apply doesn't reset the
+annotation back to zeros:
+
 ```bash
 az aks get-credentials -g "$RESOURCE_GROUP" -n "$CLUSTER"
+sed -i.bak "s/00000000-0000-0000-0000-000000000000/$CLIENT_ID/" deploy/aks/kustomization.yaml
 kubectl apply -k deploy/aks
-kubectl -n azure-dash annotate sa azure-dash azure.workload.identity/client-id="$CLIENT_ID" --overwrite
-kubectl -n azure-dash rollout restart deploy/azure-dash
 kubectl -n azure-dash rollout status deploy/azure-dash
 kubectl -n azure-dash exec deploy/azure-dash -- printenv | grep ^AZURE_
 kubectl -n azure-dash get ingress azure-dash   # browse to the ADDRESS, or: kubectl -n azure-dash port-forward svc/azure-dash 8080
 ```
+
+If pods already existed in the namespace before the client-id annotation and `azure.workload.identity/use` label
+were set (for example, you applied this overlay once already with the placeholder GUID), the Workload ID webhook
+never had a chance to mutate them: `kubectl -n azure-dash rollout restart deploy/azure-dash` after the apply above
+picks up the annotation on fresh pods.
 
 Open **Identity**. You should see:
 - mode `workload-identity`

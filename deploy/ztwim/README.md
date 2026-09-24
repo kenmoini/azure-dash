@@ -79,7 +79,14 @@ The Identity page should show:
 - a federated `sub` of `spiffe://<trust-domain>/ns/azure-dash-ztwim/sa/azure-dash` and an `iss` of `$JWT_ISSUER`
 - an Entra token whose `xms_mirid` names `id-azure-dash-ztwim`
 
-Wait more than 5 minutes, then **Refresh all** on the Azure page. The panels still load, which shows that the rotated JWT-SVID is picked up.
+Reload the **Identity** page twice, a few minutes apart, and compare the federated token's `iat`/`exp`: they
+advance between loads, which shows spiffe-helper rotating the JWT-SVID on disk and `IdentityInfoService`
+re-reading the file on every load. Clicking **Refresh all** alone doesn't prove the *token exchange* is repeated —
+it only clears the app's in-memory cache, while `ClientAssertionCredential`/MSAL still caches the Entra access
+token for its own lifetime (about 60–90 minutes). To prove the callback re-reads the file for a genuine new
+exchange, wait until the Entra access token's `exp` shown on the Identity page has passed, then click
+**Refresh all** on the Azure page: the panels still load, which means a new token exchange happened using the
+JWT-SVID that's current at that moment (not a cached access token).
 
 ## Troubleshooting
 

@@ -5,7 +5,7 @@ resources:
   - ../kubernetes
   - ingress.yaml
 patches:
-  # Replace with the user-assigned managed identity's client ID (or annotate after apply; see README).
+  # Replace with the UAMI client ID before applying (see README).
   - target: {kind: ServiceAccount, name: azure-dash}
     patch: |-
       - op: add
