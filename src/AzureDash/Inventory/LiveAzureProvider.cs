@@ -26,8 +26,9 @@ public sealed class LiveAzureProvider : IAzureProvider
     {
         _settings = settings;
         var selection = credentials.Get();
-        _arm = new ArmClient(selection.Credential, settings.SubscriptionId,
-            new ArmClientOptions { Environment = CloudEndpoints.For(settings.Cloud).Arm });
+        var options = new ArmClientOptions { Environment = CloudEndpoints.For(settings.Cloud).Arm };
+        AzureClientDefaults.Apply(options.Retry);
+        _arm = new ArmClient(selection.Credential, settings.SubscriptionId, options);
     }
 
     public async Task<SubscriptionInfo> GetSubscriptionAsync(CancellationToken ct)
