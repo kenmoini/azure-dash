@@ -1,0 +1,32 @@
+@using AzureDash.Identity
+<h2>Workload identity</h2>
+@if (Info.Error is not null)
+{
+    <div class="error">@Info.Error</div>
+}
+<dl class="kv">
+    <dt>Auth mode</dt><dd>@Info.Mode</dd>
+    <dt>Why</dt><dd>@Info.Reason</dd>
+    <dt>Credential</dt><dd>@Fmt.Or(Info.CredentialType)</dd>
+    <dt>Client ID</dt><dd>@Fmt.Or(Info.ClientId)</dd>
+    <dt>Tenant ID</dt><dd>@Fmt.Or(Info.TenantId)</dd>
+    <dt>Authority host</dt><dd>@Fmt.Or(Info.AuthorityHost)</dd>
+    <dt>Token file</dt><dd>@Fmt.Or(Info.TokenFile)</dd>
+</dl>
+@if (Info.FederatedToken is { } federated)
+{
+    <h3>Federated token (presented to Entra)</h3>
+    <p class="muted">Issued by the cluster: the Kubernetes service-account issuer, or SPIRE for ZTWIM. Entra matches its iss, sub and aud against a federated identity credential.</p>
+    <ClaimsTable Summary="federated" Now="Info.FetchedAt" />
+}
+@if (Info.AccessToken is { } access)
+{
+    <h3>Entra access token (Azure Resource Manager)</h3>
+    <p class="muted">Returned by Entra for the federated token. oid is the identity's object ID and appid/azp its client ID; xms_mirid names the managed identity when there is one.</p>
+    <ClaimsTable Summary="access" Now="Info.FetchedAt" />
+}
+<p class="muted">Checked @Fmt.Time(Info.FetchedAt). Raw tokens are never displayed. · <a href="#" hx-get="/partials/identity" hx-target="closest section">refresh</a></p>
+
+@code {
+    [Parameter, EditorRequired] public IdentityInfo Info { get; set; } = default!;
+}

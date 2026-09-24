@@ -3,6 +3,7 @@ using AzureDash;
 using AzureDash.Configuration;
 using AzureDash.Endpoints;
 using AzureDash.Identity;
+using AzureDash.Imds;
 using AzureDash.Inventory;
 using AzureDash.Load;
 using AzureDash.Runtime;
@@ -31,6 +32,12 @@ builder.Services.AddSingleton<Func<IAzureProvider>>(sp => () =>
     new LiveAzureProvider(sp.GetRequiredService<CredentialProvider>(), sp.GetRequiredService<AppSettings>()));
 builder.Services.AddSingleton<AzureSdkLogging>();
 builder.Services.AddSingleton<AzureService>();
+builder.Services.AddSingleton<IdentityInfoService>();
+builder.Services.AddHttpClient(ImdsClient.HttpClientName)
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { UseProxy = false, ConnectTimeout = ImdsClient.Timeout });
+builder.Services.AddSingleton(sp => new ImdsClient(
+    sp.GetRequiredService<IHttpClientFactory>().CreateClient(ImdsClient.HttpClientName),
+    sp.GetRequiredService<AppSettings>(), sp.GetRequiredService<TimeProvider>()));
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
 builder.Services.AddRazorPages();
@@ -46,6 +53,7 @@ app.MapHealthEndpoints();
 app.MapControlsEndpoints();
 app.MapRuntimeEndpoints();
 app.MapAzureEndpoints();
+app.MapIdentityEndpoints();
 
 await app.RunAsync();
 return 0;

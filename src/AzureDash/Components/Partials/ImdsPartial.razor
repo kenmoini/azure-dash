@@ -1,0 +1,21 @@
+@using AzureDash.Imds
+<h2>Instance metadata (IMDS)</h2>
+@if (!Info.Available)
+{
+    <p class="muted">Unavailable: @Info.Reason</p>
+}
+else
+{
+    <p class="muted">This describes the <strong>node</strong> (the VM scale set instance) this pod runs on, not the pod. On AKS the resource group is the node resource group (MC_…).</p>
+    <dl class="kv">
+        @foreach (var (key, value) in Info.Compute!)
+        {
+            <dt>@key</dt><dd>@value</dd>
+        }
+    </dl>
+}
+<p class="muted">Checked @Fmt.Time(Info.FetchedAt)</p>
+
+@code {
+    [Parameter, EditorRequired] public ImdsInfo Info { get; set; } = default!;
+}

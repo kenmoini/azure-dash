@@ -1,0 +1,23 @@
+@using AzureDash.Identity
+@if (Summary.Error is not null)
+{
+    <div class="error">@Summary.Error</div>
+}
+else
+{
+    <dl class="kv">
+        @foreach (var (name, value) in Summary.Claims)
+        {
+            <dt>@name</dt><dd>@value</dd>
+        }
+        @if (Summary.ExpiresAt is { } exp)
+        {
+            <dt>expires</dt><dd>@Fmt.Time(exp) (@Fmt.Until(exp, Now))</dd>
+        }
+    </dl>
+}
+
+@code {
+    [Parameter, EditorRequired] public JwtSummary Summary { get; set; } = default!;
+    [Parameter] public DateTimeOffset Now { get; set; }
+}
