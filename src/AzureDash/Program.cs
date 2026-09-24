@@ -1,4 +1,5 @@
 using System.Text.Json;
+using AzureDash;
 using AzureDash.Configuration;
 using AzureDash.Endpoints;
 using AzureDash.Identity;
@@ -13,6 +14,8 @@ var settings = AppSettings.FromEnvironment(env);
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.SetMinimumLevel(settings.LogLevel);
 builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+if (settings.AzureDebug)
+    builder.Logging.AddFilter("AzureDash", LogLevel.Debug).AddFilter("Azure.Sdk", LogLevel.Information);
 
 builder.Services.AddSingleton(env);
 builder.Services.AddSingleton(settings);
@@ -24,7 +27,9 @@ builder.Services.AddSingleton<IProcessExit, EnvironmentProcessExit>();
 builder.Services.AddSingleton(sp => new RuntimeInfoProvider("/", sp.GetRequiredService<EnvLookup>(), sp.GetRequiredService<StateService>()));
 builder.Services.AddSingleton(sp => new TtlCache(sp.GetRequiredService<AppSettings>().CacheTtl, sp.GetRequiredService<TimeProvider>()));
 builder.Services.AddSingleton(sp => CredentialProvider.FromSettings(sp.GetRequiredService<AppSettings>(), sp.GetRequiredService<EnvLookup>()));
-builder.Services.AddSingleton<Func<IAzureProvider>>(_ => () => throw new AzureError("no Azure provider is registered"));
+builder.Services.AddSingleton<Func<IAzureProvider>>(sp => () =>
+    new LiveAzureProvider(sp.GetRequiredService<CredentialProvider>(), sp.GetRequiredService<AppSettings>()));
+builder.Services.AddSingleton<AzureSdkLogging>();
 builder.Services.AddSingleton<AzureService>();
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
@@ -32,6 +37,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddRazorComponents();
 
 var app = builder.Build();
+if (settings.AzureDebug) app.Services.GetRequiredService<AzureSdkLogging>().Start();
 
 app.UseStaticFiles();
 app.MapRazorPages();
