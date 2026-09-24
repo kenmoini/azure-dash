@@ -1,0 +1,87 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: azure-dash-ztwim
+resources:
+  - ../kubernetes
+  - route.yaml
+  - identity-configmap.yaml
+  - spiffe-helper-configmap.yaml
+patches:
+  - target: {kind: Namespace, name: azure-dash}
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: azure-dash-ztwim
+  - target: {kind: Deployment, name: azure-dash}
+    patch: |-
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: spiffe-workload-api
+          csi:
+            driver: csi.spiffe.io
+            readOnly: true
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: spiffe-helper-config
+          configMap:
+            name: spiffe-helper
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: azure-token
+          emptyDir:
+            medium: Memory
+      - op: add
+        path: /spec/template/spec/initContainers/-
+        value:
+          name: spiffe-helper-init
+          image: registry.redhat.io/zero-trust-workload-identity-manager/spiffe-helper-rhel9:v0.11.0-1787560110
+          command: ["/spiffe-helper"]
+          args: ["-config", "/etc/spiffe-helper/helper.conf", "-daemon-mode=false"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: spiffe-workload-api, mountPath: /run/spire/sockets, readOnly: true}
+            - {name: spiffe-helper-config, mountPath: /etc/spiffe-helper, readOnly: true}
+            - {name: azure-token, mountPath: /var/run/secrets/azure}
+      - op: add
+        path: /spec/template/spec/containers/-
+        value:
+          name: spiffe-helper
+          image: registry.redhat.io/zero-trust-workload-identity-manager/spiffe-helper-rhel9:v0.11.0-1787560110
+          command: ["/spiffe-helper"]
+          args: ["-config", "/etc/spiffe-helper/helper.conf", "-daemon-mode=true"]
+          resources:
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: spiffe-workload-api, mountPath: /run/spire/sockets, readOnly: true}
+            - {name: spiffe-helper-config, mountPath: /etc/spiffe-helper, readOnly: true}
+            - {name: azure-token, mountPath: /var/run/secrets/azure}
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: azure-token
+          mountPath: /var/run/secrets/azure
+          readOnly: true
+      - op: add
+        path: /spec/template/spec/containers/0/envFrom/-
+        value:
+          configMapRef:
+            name: azure-dash-identity
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: AUTH_MODE
+          value: spiffe
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPIFFE_JWT_FILE
+          value: /var/run/secrets/azure/token
