@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AzureDash.Configuration;
 using AzureDash.Endpoints;
+using AzureDash.Identity;
 using AzureDash.Inventory;
 using AzureDash.Load;
 using AzureDash.Runtime;
@@ -22,6 +23,7 @@ builder.Services.AddSingleton<StateService>();
 builder.Services.AddSingleton<IProcessExit, EnvironmentProcessExit>();
 builder.Services.AddSingleton(sp => new RuntimeInfoProvider("/", sp.GetRequiredService<EnvLookup>(), sp.GetRequiredService<StateService>()));
 builder.Services.AddSingleton(sp => new TtlCache(sp.GetRequiredService<AppSettings>().CacheTtl, sp.GetRequiredService<TimeProvider>()));
+builder.Services.AddSingleton(sp => CredentialProvider.FromSettings(sp.GetRequiredService<AppSettings>(), sp.GetRequiredService<EnvLookup>()));
 builder.Services.AddSingleton<Func<IAzureProvider>>(_ => () => throw new AzureError("no Azure provider is registered"));
 builder.Services.AddSingleton<AzureService>();
 builder.Services.ConfigureHttpJsonOptions(o =>
