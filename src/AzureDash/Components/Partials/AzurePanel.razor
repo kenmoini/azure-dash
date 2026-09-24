@@ -1,0 +1,54 @@
+@using AzureDash.Inventory
+@using AzureDash.Components.Partials.Inventory
+<h2>@AzureKinds.Title(Kind)</h2>
+@if (Entry.Error is not null)
+{
+    <div class="error">@Entry.Error</div>
+}
+@switch (Entry.Value)
+{
+    case SubscriptionInfo s:
+        <SubscriptionTable Item="s" />
+        break;
+    case IReadOnlyList<ResourceGroupInfo> l:
+        <ResourceGroupsTable Items="l" />
+        break;
+    case IReadOnlyList<VmInfo> l:
+        <VmsTable Items="l" />
+        break;
+    case IReadOnlyList<StorageAccountInfo> l:
+        <StorageAccountsTable Items="l" />
+        break;
+    case IReadOnlyList<VnetInfo> l:
+        <VnetsTable Items="l" />
+        break;
+    case IReadOnlyList<SubnetInfo> l:
+        <SubnetsTable Items="l" />
+        break;
+    case IReadOnlyList<NsgRuleInfo> l:
+        <NsgRulesTable Items="l" />
+        break;
+    case IReadOnlyList<ResourceTypeCount> l:
+        <ResourceGraphTable Items="l" />
+        break;
+}
+<p class="muted">
+    @if (Entry.Error is not null && Entry.Value is not null)
+    {
+        <text>Last attempt @Fmt.Time(Entry.FetchedAt) failed; showing previously cached data</text>
+    }
+    else if (Entry.FetchedAt is not null)
+    {
+        <text>Fetched @Fmt.Time(Entry.FetchedAt)</text>
+    }
+    else
+    {
+        <text>Never fetched</text>
+    }
+    · <a href="#" hx-get="/partials/azure/@(Kind)?refresh=1" hx-target="closest [data-azure-panel]">refresh</a>
+</p>
+
+@code {
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+    [Parameter, EditorRequired] public CacheEntry Entry { get; set; } = default!;
+}

@@ -1,0 +1,27 @@
+@using AzureDash.Inventory
+@if (Items.Count == 0)
+{
+    <p class="muted">No virtual machines or scale sets.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Kind</th><th>Name</th><th>Resource group</th><th>Location</th><th>Zones</th><th>Size / SKU</th><th>Power / capacity</th></tr></thead>
+            <tbody>
+                @foreach (var v in Items)
+                {
+                    <tr>
+                        <td>@v.Kind</td><td>@v.Name</td><td>@v.ResourceGroup</td><td>@v.Location</td>
+                        <td>@Fmt.Or(v.Zones)</td><td>@Fmt.Or(v.Size)</td>
+                        <td>@(v.Kind == "VMSS" ? $"{v.Capacity?.ToString() ?? "?"} instances" : Fmt.Or(v.PowerState))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<VmInfo> Items { get; set; } = [];
+}

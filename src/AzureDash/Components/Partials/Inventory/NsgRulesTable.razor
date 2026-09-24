@@ -1,0 +1,27 @@
+@using AzureDash.Inventory
+@if (Items.Count == 0)
+{
+    <p class="muted">No custom NSG rules (default rules are not shown).</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>NSG</th><th>Rule</th><th>Direction</th><th>Priority</th><th>Access</th><th>Protocol</th><th>Ports</th><th>Source → destination</th></tr></thead>
+            <tbody>
+                @foreach (var r in Items)
+                {
+                    <tr>
+                        <td>@r.Nsg</td><td>@r.Rule</td><td>@Fmt.Or(r.Direction)</td><td>@(r.Priority?.ToString() ?? "—")</td>
+                        <td>@Fmt.Or(r.Access)</td><td>@Fmt.Or(r.Protocol)</td><td>@r.Ports</td><td>@r.Source → @r.Destination</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="muted">Default rules are not shown.</p>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<NsgRuleInfo> Items { get; set; } = [];
+}

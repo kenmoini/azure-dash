@@ -1,0 +1,16 @@
+@using AzureDash.Inventory
+@if (Item.Warning is not null)
+{
+    <div class="warning">@Item.Warning</div>
+}
+<dl class="kv">
+    <dt>Subscription ID</dt><dd>@Item.Id</dd>
+    <dt>Name</dt><dd>@Item.DisplayName</dd>
+    <dt>State</dt><dd>@Fmt.Or(Item.State)</dd>
+    <dt>Tenant ID</dt><dd>@Fmt.Or(Item.TenantId)</dd>
+    <dt>Selected by</dt><dd>@Item.Source</dd>
+</dl>
+
+@code {
+    [Parameter, EditorRequired] public SubscriptionInfo Item { get; set; } = default!;
+}

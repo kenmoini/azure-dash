@@ -1,0 +1,26 @@
+@using AzureDash.Inventory
+@if (Items.Count == 0)
+{
+    <p class="muted">No storage accounts.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Name</th><th>Resource group</th><th>Location</th><th>Kind</th><th>SKU</th><th>Access tier</th><th>Public network access</th></tr></thead>
+            <tbody>
+                @foreach (var a in Items)
+                {
+                    <tr>
+                        <td>@a.Name</td><td>@a.ResourceGroup</td><td>@a.Location</td><td>@Fmt.Or(a.Kind)</td>
+                        <td>@Fmt.Or(a.Sku)</td><td>@Fmt.Or(a.AccessTier)</td><td>@Fmt.Or(a.PublicNetworkAccess)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<StorageAccountInfo> Items { get; set; } = [];
+}

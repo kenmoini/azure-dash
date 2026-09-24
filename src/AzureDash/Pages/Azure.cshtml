@@ -1,0 +1,30 @@
+@page "/azure"
+@using AzureDash.Configuration
+@using AzureDash.Inventory
+@inject AppSettings Settings
+@{
+    ViewData["Title"] = "Azure";
+    ViewData["Nav"] = "azure";
+}
+<div class="grid">
+    <section class="card">
+        <div class="header-row">
+            <h2>Azure resources</h2>
+            <button class="secondary" hx-post="/api/azure/refresh" hx-swap="none"
+                    hx-on::after-request="document.querySelectorAll('section[hx-get^=&quot;/partials/azure/&quot;]').forEach(p => htmx.trigger(p, 'refresh'))">Refresh all</button>
+        </div>
+        <dl class="kv">
+            <dt>Subscription</dt><dd>@(Settings.SubscriptionId ?? "auto-detect (AZURE_SUBSCRIPTION_ID not set)")</dd>
+            <dt>Resource group</dt><dd>@(Settings.ResourceGroup ?? "all (AZURE_RESOURCE_GROUP not set)")</dd>
+            <dt>Cloud</dt><dd>@Settings.Cloud</dd>
+        </dl>
+        <p class="muted">Results are cached for @Settings.CacheTtl.TotalSeconds seconds. Each panel loads and fails independently.</p>
+    </section>
+    @foreach (var (kind, title) in AzureKinds.All)
+    {
+        <section class="card" data-azure-panel hx-get="/partials/azure/@kind" hx-trigger="load, refresh">
+            <h2>@title</h2>
+            <p class="muted">Loading…</p>
+        </section>
+    }
+</div>

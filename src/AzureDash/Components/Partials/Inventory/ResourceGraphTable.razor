@@ -1,0 +1,24 @@
+@using AzureDash.Inventory
+@if (Items.Count == 0)
+{
+    <p class="muted">No resources visible to this identity.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Resource type</th><th>Count</th></tr></thead>
+            <tbody>
+                @foreach (var t in Items)
+                {
+                    <tr><td>@t.Type</td><td>@t.Count</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="muted">One KQL query: <code>Resources | summarize count() by type</code>, limited to what this identity can read.</p>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ResourceTypeCount> Items { get; set; } = [];
+}

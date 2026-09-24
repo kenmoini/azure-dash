@@ -1,0 +1,23 @@
+@using AzureDash.Inventory
+@if (Items.Count == 0)
+{
+    <p class="muted">No subnets.</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>VNet</th><th>Name</th><th>Prefix</th><th>NSG</th><th>Route table</th></tr></thead>
+            <tbody>
+                @foreach (var s in Items)
+                {
+                    <tr><td>@s.Vnet</td><td>@s.Name</td><td>@Fmt.Or(s.AddressPrefix)</td><td>@Fmt.Or(s.Nsg)</td><td>@Fmt.Or(s.RouteTable)</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<SubnetInfo> Items { get; set; } = [];
+}
