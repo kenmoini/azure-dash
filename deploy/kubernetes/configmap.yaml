@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-dash-config
+data:
+  AUTH_MODE: auto
+  AZURE_SUBSCRIPTION_ID: ""
+  AZURE_RESOURCE_GROUP: ""
+  AZURE_CLOUD: public
+  AZURE_CACHE_TTL_SECONDS: "60"
+  CONTROLS_ENABLED: "true"
+  LOG_LEVEL: Information
+  AZURE_DEBUG: "false"

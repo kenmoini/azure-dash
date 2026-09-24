@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: azure-dash
+resources:
+  - ../kubernetes
+  - ingress.yaml
+patches:
+  # Replace with the user-assigned managed identity's client ID (or annotate after apply; see README).
+  - target: {kind: ServiceAccount, name: azure-dash}
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          azure.workload.identity/client-id: "00000000-0000-0000-0000-000000000000"
+  # The Workload ID webhook only mutates pods carrying this label.
+  - target: {kind: Deployment, name: azure-dash}
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/azure.workload.identity~1use
+        value: "true"
