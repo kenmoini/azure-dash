@@ -9,11 +9,18 @@ then selects `WorkloadIdentityCredential`.
 ## 1. Enable the OIDC issuer and Workload ID
 
 ```bash
-export RESOURCE_GROUP=rg-azure-dash CLUSTER=aks-azure-dash IDENTITY=id-azure-dash
+export RESOURCE_GROUP="rg-azure-dash"
+export CLUSTER="my-aks-cluster"
+export IDENTITY="id-azure-dash"
 export SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+# For AKS Standard - AKS Automatic already has WID enabled
 az aks update -g "$RESOURCE_GROUP" -n "$CLUSTER" --enable-oidc-issuer --enable-workload-identity
-# Optional, for the Ingress in this overlay:
+
+# Optional for AKS Standard, for the Ingress in this overlay:
 az aks approuting enable -g "$RESOURCE_GROUP" -n "$CLUSTER"
+
+# Get the AKS OIDC Issuer URI
 export ISSUER=$(az aks show -g "$RESOURCE_GROUP" -n "$CLUSTER" --query oidcIssuerProfile.issuerUrl -o tsv)
 ```
 
@@ -44,11 +51,28 @@ Put `$CLIENT_ID` into `deploy/aks/kustomization.yaml` **before** applying, so a 
 annotation back to zeros:
 
 ```bash
+# Give yourself access to the AKS cluster if needed
+AKS_ID=$(az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER --query id --output tsv)
+az role assignment create --role "Azure Kubernetes Service RBAC Cluster Admin" --assignee "you@domain.com" --scope $AKS_ID
+
+# Log into the AKS Cluster
 az aks get-credentials -g "$RESOURCE_GROUP" -n "$CLUSTER"
+
+# Replace variable placeholders
 sed -i.bak "s/00000000-0000-0000-0000-000000000000/$CLIENT_ID/" deploy/aks/kustomization.yaml
+sed -i.bak "s/AZ_SUB_ID/$SUBSCRIPTION_ID/" deploy/aks/kustomization.yaml
+sed -i.bak "s/AZ_RG_NAME/$RESOURCE_GROUP/" deploy/aks/kustomization.yaml
+
+# Deploy the application
 kubectl apply -k deploy/aks
+
+# Watch the rollout, AKS Auto may take a minute to scale up a node
 kubectl -n azure-dash rollout status deploy/azure-dash
+
+# Ensure the injected environment variables are set
 kubectl -n azure-dash exec deploy/azure-dash -- printenv | grep ^AZURE_
+
+# Access the application UI
 kubectl -n azure-dash get ingress azure-dash   # browse to the ADDRESS, or: kubectl -n azure-dash port-forward svc/azure-dash 8080
 ```
 

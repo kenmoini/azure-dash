@@ -22,7 +22,7 @@ spec:
       initContainers: []
       containers:
         - name: azure-dash
-          image: ghcr.io/kenmoini/azure-dash:latest
+          image: ghcr.io/kenmoini/azure-dash:main
           imagePullPolicy: Always
           ports:
             - name: http

@@ -18,3 +18,11 @@ patches:
       - op: add
         path: /spec/template/metadata/labels/azure.workload.identity~1use
         value: "true"
+  - target: {kind: ConfigMap, name: azure-dash-config}
+    patch: |-
+      - op: replace
+        path: /data/AZURE_SUBSCRIPTION_ID
+        value: "AZ_SUB_ID"
+      - op: replace
+        path: /data/AZURE_RESOURCE_GROUP
+        value: "AZ_RG_NAME"
