@@ -6,12 +6,12 @@ public static class AzureKinds
     [
         ("subscription", "Subscription"),
         ("resourcegroups", "Resource groups"),
+        ("resourcegraph", "Resource Graph: resources by type"),
         ("vms", "Virtual machines & scale sets"),
         ("storageaccounts", "Storage accounts"),
         ("vnets", "Virtual networks"),
         ("subnets", "Subnets"),
         ("nsgrules", "Network security group rules"),
-        ("resourcegraph", "Resource Graph: resources by type"),
     ];
 
     public static bool IsKnown(string kind) => All.Any(k => k.Kind == kind);
