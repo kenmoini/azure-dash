@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: azure-dash-identity
 data:
-  AZURE_CLIENT_ID: "00000000-0000-0000-0000-000000000000"   # user-assigned managed identity client ID
-  AZURE_TENANT_ID: "00000000-0000-0000-0000-000000000000"
+  AZURE_CLIENT_ID: "AZCID-00000000-0000-0000-0000-000000000000"   # user-assigned managed identity client ID
+  AZURE_TENANT_ID: "AZTEN-00000000-0000-0000-0000-000000000000"

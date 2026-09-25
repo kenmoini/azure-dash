@@ -22,22 +22,11 @@ The Zero Trust Workload Identity Manager operator must be installed, with its `c
      # ...
    ```
 2. **Public discovery endpoint.** `SpireOIDCDiscoveryProvider` must be reachable from the internet over HTTPS with a **publicly trusted** certificate, for example `managedRoute: "true"` plus a certificate from cert-manager/ACME via `externalSecretRef`. Its `jwtIssuer` must equal the SpireServer's.
-3. **Key usage.** The keys in the JWKS must carry `"use": "sig"`.
-
-Check all three:
-
-```bash
-export JWT_ISSUER=$(oc get spireserver cluster -o jsonpath='{.spec.jwtIssuer}')
-export TRUST_DOMAIN=$(oc get zerotrustworkloadidentitymanager cluster -o jsonpath='{.spec.trustDomain}')
-curl -fsS "$JWT_ISSUER/.well-known/openid-configuration" | jq '{issuer, jwks_uri, id_token_signing_alg_values_supported}'
-curl -fsS "$(curl -fsS "$JWT_ISSUER/.well-known/openid-configuration" | jq -r .jwks_uri)" | jq '.keys[] | {kty, alg, use, kid}'
-```
-
-**Expect `kty: "RSA"` and `use: "sig"`.** Run these from outside the cluster to prove the endpoint is public.
-
-Workloads need a SPIFFE ID of the form `spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>`. Check which `ClusterSPIFFEID` resources exist with `oc get clusterspiffeid`. If none matches, create one:
+3. Workloads need a SPIFFE ID of the form `spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>`. Check which `ClusterSPIFFEID` resources exist with `oc get clusterspiffeid`. If none matches, create one:
 
 ```yaml
+---
+# The default ClusterSPIFFEID should fit the same format, only create this one if needed
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
 metadata: {name: azure-dash}
@@ -50,24 +39,38 @@ spec:
 ## 1. Identity, federated credential, Reader
 
 ```bash
-export RESOURCE_GROUP=rg-azure-dash IDENTITY=id-azure-dash-ztwim
+# Don't forget the previously set vars
+export RESOURCE_GROUP=rg-azure-dash
+export IDENTITY=id-azure-dash-ztwim
 export SUBSCRIPTION_ID=$(az account show --query id -o tsv) TENANT_ID=$(az account show --query tenantId -o tsv)
+
+# Create an EntraID Identity
 az identity create -g "$RESOURCE_GROUP" -n "$IDENTITY"
+
+# Get the Identity Client ID
 export CLIENT_ID=$(az identity show -g "$RESOURCE_GROUP" -n "$IDENTITY" --query clientId -o tsv)
+
+# Add the ZTWIM OIDC Issuer to the federated trust
 az identity federated-credential create --name azure-dash-ztwim --identity-name "$IDENTITY" -g "$RESOURCE_GROUP" \
   --issuer "$JWT_ISSUER" \
   --subject "spiffe://$TRUST_DOMAIN/ns/azure-dash-ztwim/sa/azure-dash" \
   --audience api://AzureADTokenExchange
+
+# Give the Identity Principal access to read things
 az role assignment create --assignee-object-id "$(az identity show -g "$RESOURCE_GROUP" -n "$IDENTITY" --query principalId -o tsv)" \
   --assignee-principal-type ServicePrincipal --role Reader --scope "/subscriptions/$SUBSCRIPTION_ID"
 ```
 
 ## 2. Deploy
 
-Put `$CLIENT_ID` and `$TENANT_ID` into `deploy/ztwim/identity-configmap.yaml`, then:
+Put `$CLIENT_ID` and `$TENANT_ID` into `deploy/ztwim/identity-configmap.yaml`, then deploy:
 
 ```bash
+sed -i.bak "s/AZCID-00000000-0000-0000-0000-000000000000/$CLIENT_ID/" deploy/ztwim/identity-configmap.yaml
+sed -i.bak "s/AZTEN-00000000-0000-0000-0000-000000000000/$TENANT_ID/" deploy/ztwim/identity-configmap.yaml
+
 oc apply -k deploy/ztwim
+
 oc -n azure-dash-ztwim rollout status deploy/azure-dash
 oc -n azure-dash-ztwim logs deploy/azure-dash -c spiffe-helper --tail=20
 oc -n azure-dash-ztwim exec deploy/azure-dash -c azure-dash -- head -c 20 /var/run/secrets/azure/token; echo   # expect: eyJ...
