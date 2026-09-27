@@ -26,7 +26,8 @@ The Zero Trust Workload Identity Manager operator must be installed, with its `c
 
 ```yaml
 ---
-# The default ClusterSPIFFEID should fit the same format, only create this one if needed
+# The default ClusterSPIFFEID should fit the same format
+# Only create this one if needed
 apiVersion: spire.spiffe.io/v1alpha1
 kind: ClusterSPIFFEID
 metadata: {name: azure-dash}
@@ -66,14 +67,19 @@ az role assignment create --assignee-object-id "$(az identity show -g "$RESOURCE
 Put `$CLIENT_ID` and `$TENANT_ID` into `deploy/ztwim/identity-configmap.yaml`, then deploy:
 
 ```bash
+# Replace placeholders
 sed -i.bak "s/AZCID-00000000-0000-0000-0000-000000000000/$CLIENT_ID/" deploy/ztwim/identity-configmap.yaml
 sed -i.bak "s/AZTEN-00000000-0000-0000-0000-000000000000/$TENANT_ID/" deploy/ztwim/identity-configmap.yaml
 
+# Deploy the application
 oc apply -k deploy/ztwim
 
+# Check the status of the application
 oc -n azure-dash-ztwim rollout status deploy/azure-dash
 oc -n azure-dash-ztwim logs deploy/azure-dash -c spiffe-helper --tail=20
 oc -n azure-dash-ztwim exec deploy/azure-dash -c azure-dash -- head -c 20 /var/run/secrets/azure/token; echo   # expect: eyJ...
+
+# Access the application Route
 oc -n azure-dash-ztwim get route azure-dash -o jsonpath='https://{.spec.host}{"\n"}'
 ```
 
