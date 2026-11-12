@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Build stage runs on the build host's architecture and cross-compiles for TARGETARCH (no QEMU needed).
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 ARG TARGETARCH
 WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props ./
