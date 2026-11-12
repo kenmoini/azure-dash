@@ -9,7 +9,7 @@ RUN dotnet restore src/AzureDash/AzureDash.csproj -a $TARGETARCH
 COPY src/ src/
 RUN dotnet publish src/AzureDash/AzureDash.csproj -c Release -a $TARGETARCH --no-restore -o /app /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:11.0
 LABEL org.opencontainers.image.title="azure-dash" \
       org.opencontainers.image.description="Azure Workload Identity demo dashboard for AKS and OpenShift" \
       org.opencontainers.image.source="https://github.com/kenmoini/azure-dash" \
